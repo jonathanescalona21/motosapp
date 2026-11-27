@@ -1,4 +1,5 @@
 {% extends 'motosapp/base.html' %}
+{% load static filtros %}
 
 {% block title %}Catálogo de motos | MotoShop{% endblock %}
 
@@ -6,51 +7,50 @@
 <div class="page-header">
     <div>
         <h1>Catálogo de Motos</h1>
-        <p class="subtitle">{{ motos|length }} moto{{ motos|length|pluralize }} registrada{{ motos|length|pluralize }}</p>
+        <p class="subtitle">{{ motos|length }} moto{{ motos|length|pluralize }} encontrada{{ motos|length|pluralize }}</p>
     </div>
     <a href="{% url 'crear_moto' %}" class="btn btn-green">+ Ingresar Nueva Moto</a>
 </div>
 
-<div class="table-wrapper">
-    <table>
-        <thead>
-            <tr>
-                <th scope="col">Imagen</th>
-                <th scope="col">Nombre</th>
-                <th scope="col">Marca</th>
-                <th scope="col">Año</th>
-                <th scope="col">Cilindrada</th>
-                <th scope="col">Precio</th>
-                <th scope="col">Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for moto in motos %}
-            <tr>
-                <td>
-                    {% if moto.imagen %}
-                    <img src="{{ moto.imagen.url }}" class="moto-thumbnail" alt="Imagen de {{ moto.nombre }}">
-                    {% else %}
-                    <span class="subtitle">Sin imagen</span>
-                    {% endif %}
-                </td>
-                <td><strong>{{ moto.nombre }}</strong></td>
-                <td>{{ moto.marca }}</td>
-                <td>{{ moto.anio }}</td>
-                <td><span class="badge">{{ moto.cilindrada }} cc</span></td>
-                <td class="price">${{ moto.precio|floatformat:"0g" }}</td>
-                <td>
-                    <a href="{% url 'detalle_moto' moto.pk %}" class="btn btn-blue">Ver</a>
-                    <a href="{% url 'editar_moto' moto.pk %}" class="btn btn-yellow">Editar</a>
-                    <a href="{% url 'eliminar_moto' moto.pk %}" class="btn btn-red">Eliminar</a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="7" class="empty">🏍️ No hay motos registradas en el sistema.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<!-- buscador por nombre o marca -->
+<form method="get" class="buscador">
+    <input type="search" name="buscar" value="{{ buscar }}" placeholder="Buscar por nombre o marca...">
+    <button type="submit" class="btn btn-orange">Buscar</button>
+    {% if buscar %}
+    <a href="{% url 'lista_motos' %}" class="btn btn-gray">Limpiar</a>
+    {% endif %}
+</form>
+
+<div class="tarjetas">
+    {% for moto in motos %}
+    <div class="tarjeta">
+        <div class="tarjeta-imagen">
+            {% if moto.imagen %}
+            <img src="{{ moto.imagen.url }}" alt="Imagen de {{ moto.nombre }}">
+            {% else %}
+            <img src="{% static 'motosapp/img/moto.svg' %}" class="icono-moto" alt="Sin imagen">
+            {% endif %}
+        </div>
+        <div class="tarjeta-cuerpo">
+            <h3>{{ moto.nombre }}</h3>
+            <p>{{ moto.marca }} · {{ moto.anio }} · <span class="badge">{{ moto.cilindrada }} cc</span></p>
+            <span class="price">${{ moto.precio|puntos }}</span>
+        </div>
+        <div class="tarjeta-botones">
+            <a href="{% url 'detalle_moto' moto.pk %}" class="btn btn-blue btn-small">Ver</a>
+            <a href="{% url 'editar_moto' moto.pk %}" class="btn btn-yellow btn-small">Editar</a>
+            <a href="{% url 'eliminar_moto' moto.pk %}" class="btn btn-red btn-small">Eliminar</a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty">
+        <img src="{% static 'motosapp/img/moto.svg' %}" alt="">
+        {% if buscar %}
+        No se encontraron motos con "{{ buscar }}".
+        {% else %}
+        No hay motos registradas en el sistema.
+        {% endif %}
+    </div>
+    {% endfor %}
 </div>
 {% endblock %}

@@ -1,0 +1,254 @@
+{
+  "info": {
+    "name": "API Motos - EVA04",
+    "description": "Pruebas de la API de motos con JWT. Ejecutar primero 'Login correcto' para guardar el token.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "url", "value": "http://127.0.0.1:8000" },
+    { "key": "token", "value": "" },
+    { "key": "refresh", "value": "" },
+    { "key": "id_moto", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Login",
+      "item": [
+        {
+          "name": "Login correcto",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Responde 200', function () { pm.response.to.have.status(200); });",
+              "var datos = pm.response.json();",
+              "pm.test('Entrega access y refresh', function () { pm.expect(datos.access).to.be.a('string'); pm.expect(datos.refresh).to.be.a('string'); });",
+              "pm.collectionVariables.set('token', datos.access);",
+              "pm.collectionVariables.set('refresh', datos.refresh);"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}" },
+            "url": { "raw": "{{url}}/api/login/", "host": ["{{url}}"], "path": ["api", "login", ""] }
+          }
+        },
+        {
+          "name": "Login incorrecto",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Responde 401', function () { pm.response.to.have.status(401); });",
+              "pm.test('Trae mensaje de error', function () { pm.expect(pm.response.json().error).to.be.a('string'); });"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"claveMala\"\n}" },
+            "url": { "raw": "{{url}}/api/login/", "host": ["{{url}}"], "path": ["api", "login", ""] }
+          }
+        },
+        {
+          "name": "Refresh token",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Responde 200', function () { pm.response.to.have.status(200); });",
+              "pm.collectionVariables.set('token', pm.response.json().access);"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refresh\": \"{{refresh}}\"\n}" },
+            "url": { "raw": "{{url}}/api/token/refresh/", "host": ["{{url}}"], "path": ["api", "token", "refresh", ""] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Motos",
+      "item": [
+        {
+          "name": "POST crear moto",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Responde 201', function () { pm.response.to.have.status(201); });",
+              "pm.collectionVariables.set('id_moto', pm.response.json().moto.id);"
+            ]}
+          }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"CB 190R\",\n  \"marca\": \"Honda\",\n  \"anio\": 2024,\n  \"cilindrada\": 190,\n  \"precio\": 2490000\n}" },
+            "url": { "raw": "{{url}}/api/motos/", "host": ["{{url}}"], "path": ["api", "motos", ""] }
+          }
+        },
+        {
+          "name": "GET lista de motos",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Responde 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Devuelve una lista', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+            ]}
+          }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "url": { "raw": "{{url}}/api/motos/", "host": ["{{url}}"], "path": ["api", "motos", ""] }
+          }
+        },
+        {
+          "name": "GET moto por id",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+            ]}
+          }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "url": { "raw": "{{url}}/api/motos/{{id_moto}}/", "host": ["{{url}}"], "path": ["api", "motos", "{{id_moto}}", ""] }
+          }
+        },
+        {
+          "name": "PUT editar moto",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Responde 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Se guardo el cambio', function () { pm.expect(pm.response.json().moto.precio).to.eql(2390000); });"
+            ]}
+          }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"CB 190R Edicion Especial\",\n  \"marca\": \"Honda\",\n  \"anio\": 2025,\n  \"cilindrada\": 190,\n  \"precio\": 2390000\n}" },
+            "url": { "raw": "{{url}}/api/motos/{{id_moto}}/", "host": ["{{url}}"], "path": ["api", "motos", "{{id_moto}}", ""] }
+          }
+        },
+        {
+          "name": "DELETE eliminar moto",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Responde 204', function () { pm.response.to.have.status(204); });"
+            ]}
+          }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "DELETE",
+            "url": { "raw": "{{url}}/api/motos/{{id_moto}}/", "host": ["{{url}}"], "path": ["api", "motos", "{{id_moto}}", ""] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pruebas de error",
+      "item": [
+        {
+          "name": "GET sin token (401)",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Responde 401', function () { pm.response.to.have.status(401); });"
+            ]}
+          }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{url}}/api/motos/", "host": ["{{url}}"], "path": ["api", "motos", ""] }
+          }
+        },
+        {
+          "name": "GET con token invalido (401)",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Responde 401', function () { pm.response.to.have.status(401); });"
+            ]}
+          }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "tokenInventado123", "type": "string" }] },
+            "method": "GET",
+            "url": { "raw": "{{url}}/api/motos/", "host": ["{{url}}"], "path": ["api", "motos", ""] }
+          }
+        },
+        {
+          "name": "GET id que no existe (404)",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Responde 404', function () { pm.response.to.have.status(404); });",
+              "pm.test('Trae mensaje', function () { pm.expect(pm.response.json().error).to.include('No existe'); });"
+            ]}
+          }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "url": { "raw": "{{url}}/api/motos/99999/", "host": ["{{url}}"], "path": ["api", "motos", "99999", ""] }
+          }
+        },
+        {
+          "name": "POST con datos malos (400)",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Responde 400', function () { pm.response.to.have.status(400); });",
+              "pm.test('Marca los campos con error', function () { var d = pm.response.json(); pm.expect(d).to.have.property('anio'); pm.expect(d).to.have.property('precio'); });"
+            ]}
+          }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Moto mala\",\n  \"marca\": \"X\",\n  \"anio\": 1500,\n  \"cilindrada\": -10,\n  \"precio\": 0\n}" },
+            "url": { "raw": "{{url}}/api/motos/", "host": ["{{url}}"], "path": ["api", "motos", ""] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logout",
+      "item": [
+        {
+          "name": "Cerrar sesion",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+            ]}
+          }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refresh\": \"{{refresh}}\"\n}" },
+            "url": { "raw": "{{url}}/api/logout/", "host": ["{{url}}"], "path": ["api", "logout", ""] }
+          }
+        },
+        {
+          "name": "Refresh despues del logout (401)",
+          "event": [{
+            "listen": "test",
+            "script": { "type": "text/javascript", "exec": [
+              "pm.test('Responde 401 porque el token esta en la blacklist', function () { pm.response.to.have.status(401); });"
+            ]}
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refresh\": \"{{refresh}}\"\n}" },
+            "url": { "raw": "{{url}}/api/token/refresh/", "host": ["{{url}}"], "path": ["api", "token", "refresh", ""] }
+          }
+        }
+      ]
+    }
+  ]
+}

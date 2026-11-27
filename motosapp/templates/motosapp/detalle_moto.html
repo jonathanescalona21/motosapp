@@ -1,4 +1,5 @@
 {% extends 'motosapp/base.html' %}
+{% load static filtros %}
 
 {% block title %}{{ moto.nombre }} | MotoShop{% endblock %}
 
@@ -7,6 +8,8 @@
 
 {% if moto.imagen %}
 <img src="{{ moto.imagen.url }}" class="detail-image" alt="Imagen de {{ moto.nombre }}">
+{% else %}
+<img src="{% static 'motosapp/img/moto.svg' %}" class="detail-icono" alt="Sin imagen">
 {% endif %}
 
 <div class="detail-grid">
@@ -14,7 +17,7 @@
     <div class="detail-item"><small>Marca</small><strong>{{ moto.marca }}</strong></div>
     <div class="detail-item"><small>Año</small><strong>{{ moto.anio }}</strong></div>
     <div class="detail-item"><small>Cilindrada</small><strong>{{ moto.cilindrada }} cc</strong></div>
-    <div class="detail-item"><small>Precio</small><strong class="price">${{ moto.precio|floatformat:"0g" }}</strong></div>
+    <div class="detail-item"><small>Precio</small><strong class="price">${{ moto.precio|puntos }}</strong></div>
 </div>
 
 <div class="form-actions">
